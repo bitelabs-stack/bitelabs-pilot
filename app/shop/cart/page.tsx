@@ -18,6 +18,12 @@ export default function CartPage() {
     if (raw) setItems(JSON.parse(raw))
   }, [])
 
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data: { user } }) => {
+      if (!user) router.push('/auth/login')
+    })
+  }, [router])
+
   const totalKrw = items.reduce((s, i) => s + i.price_krw * i.qty, 0)
 
   async function handleSubmit(e: React.FormEvent) {
