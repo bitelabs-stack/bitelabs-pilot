@@ -15,7 +15,16 @@ export default function CartPage() {
 
   useEffect(() => {
     const raw = localStorage.getItem('bitelabs_cart')
-    if (raw) setItems(JSON.parse(raw))
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) {
+          setItems(parsed.filter(i => typeof i.price_krw === 'number' && typeof i.qty === 'number'))
+        }
+      } catch {
+        localStorage.removeItem('bitelabs_cart')
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -30,6 +39,13 @@ export default function CartPage() {
     e.preventDefault()
     if (items.length === 0) return
     setSubmitting(true)
+
+    const minDate = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0]
+    if (deliveryDate < minDate) {
+      alert('배송일은 오늘로부터 최소 2일 이후여야 합니다.')
+      setSubmitting(false)
+      return
+    }
 
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -61,7 +77,7 @@ export default function CartPage() {
     if (error || !order) { alert('주문 실패. 다시 시도해주세요.'); setSubmitting(false); return }
 
     // 주문 항목 생성
-    await supabase.from('order_items').insert(
+    const { error: itemsError } = await supabase.from('order_items').insert(
       items.map(i => ({
         order_id: order.id,
         product_id: i.product_id,
@@ -69,6 +85,14 @@ export default function CartPage() {
         unit_price_krw: i.price_krw,
       }))
     )
+
+    if (itemsError) {
+      // 주문 항목 실패 시 orphan 주문 삭제
+      await supabase.from('orders').delete().eq('id', order.id)
+      alert('주문 항목 저장 실패. 다시 시도해주세요.')
+      setSubmitting(false)
+      return
+    }
 
     localStorage.removeItem('bitelabs_cart')
     setDone(true)
