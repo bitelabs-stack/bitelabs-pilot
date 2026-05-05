@@ -10,19 +10,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const { id } = await params
-  const { status } = await request.json()
-  const validStatuses = ['pending', 'routed', 'delivered', 'cancelled']
-  if (!validStatuses.includes(status)) {
-    return NextResponse.json({ error: '유효하지 않은 status' }, { status: 400 })
+  const { in_stock } = await request.json()
+  if (typeof in_stock !== 'boolean') {
+    return NextResponse.json({ error: 'in_stock must be boolean' }, { status: 400 })
   }
 
-  const update: Record<string, unknown> = { status }
-  if (status === 'routed') {
-    update.routed_at = new Date().toISOString()
-    update.routed_by = user.email
-  }
-
-  const { error } = await supabase.from('orders').update(update).eq('id', id)
+  const { error } = await supabase.from('products').update({ in_stock }).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

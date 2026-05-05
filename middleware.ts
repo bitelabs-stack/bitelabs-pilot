@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && pathname.startsWith('/admin')) {
-    const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',')
+    const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim())
     if (!adminEmails.includes(user.email ?? '')) {
       return NextResponse.redirect(new URL('/shop', request.url))
     }

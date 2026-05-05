@@ -36,7 +36,15 @@ export default function AdminProductsPage() {
   }
 
   async function toggleStock(id: string, current: boolean) {
-    await createClient().from('products').update({ in_stock: !current }).eq('id', id)
+    const res = await fetch(`/api/admin/products/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ in_stock: !current }),
+    })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      alert(`재고 변경 실패: ${json.error ?? '알 수 없는 오류'}`)
+    }
     loadProducts()
   }
 

@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',')
+  const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim())
   if (!user || !adminEmails.includes(user.email ?? '')) redirect('/auth/login')
   return (
     <div>

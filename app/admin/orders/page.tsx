@@ -33,11 +33,15 @@ export default function AdminOrdersPage() {
   useEffect(() => { loadOrders() }, [])
 
   async function updateStatus(id: string, status: string) {
-    await fetch(`/api/admin/orders/${id}`, {
+    const res = await fetch(`/api/admin/orders/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      alert(`상태 변경 실패: ${json.error ?? '알 수 없는 오류'}`)
+    }
     loadOrders()
   }
 

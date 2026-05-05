@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',')
+  const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim())
   if (!user || !adminEmails.includes(user.email ?? '')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
